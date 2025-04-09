@@ -73,19 +73,18 @@ function performSearch() {
     if (searchInContent.checked) {
       // Поиск по содержимому
       filteredCategories = categories.filter(category => {
-        const matchingEntries = category.entries.filter(entry => 
+        // Проверяем, есть ли совпадения в записях
+        return category.entries.some(entry => 
           entry.toLowerCase().includes(query)
         );
-        if (matchingEntries.length > 0) {
-          category.matchingEntries = matchingEntries;
-          return true;
-        }
-        return false;
       });
 
-      const totalMatches = filteredCategories.reduce((sum, cat) => 
-        sum + cat.matchingEntries.length, 0
-      );
+      // Подсчитываем общее количество записей, содержащих запрос
+      const totalMatches = filteredCategories.reduce((sum, cat) => {
+        return sum + cat.entries.filter(entry => 
+          entry.toLowerCase().includes(query)
+        ).length;
+      }, 0);
       
       searchInfo.textContent = filteredCategories.length > 0
         ? `Найдено: ${filteredCategories.length} категорий, ${totalMatches} записей`
@@ -179,14 +178,14 @@ function showCategory(item) {
 
   categoryInfo.textContent = `Записей: ${item.entries.length}`;
   
-  // Всегда показываем все записи категории
-  const entriesToShow = [...item.entries];
+  // Всегда показываем все записи категории, без фильтрации
+  const entries = [...item.entries];
   
   // Сортируем записи по алфавиту
-  entriesToShow.sort((a, b) => a.localeCompare(b));
+  entries.sort((a, b) => a.localeCompare(b));
 
   // Создаем и добавляем элементы списка
-  entriesToShow.forEach((entry) => {
+  entries.forEach((entry) => {
     const li = document.createElement("li");
     li.textContent = entry;
     li.onclick = () => {
