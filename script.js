@@ -53,38 +53,67 @@ modeSelect.addEventListener("change", () => {
 
 // Улучшенный поиск
 searchInput.addEventListener("input", (e) => {
-  const query = e.target.value.toLowerCase();
+  const query = e.target.value.toLowerCase().trim();
   
-  // Очищаем предыдущий таймаут
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
   
-  // Устанавливаем новый таймаут для отложенного поиска
   searchTimeout = setTimeout(() => {
     if (query.length === 0) {
       filteredCategories = categories;
       searchInfo.textContent = "";
     } else {
-      // Ищем по категориям и содержимому
-      filteredCategories = categories.map(category => {
-        const matchingEntries = category.entries.filter(entry => 
-          entry.toLowerCase().includes(query)
-        );
-        return {
-          ...category,
-          matchingEntries
-        };
-      }).filter(category => 
-        category.category.toLowerCase().includes(query) || 
-        category.matchingEntries.length > 0
+      // Сначала ищем точные совпадения в названиях категорий
+      const exactCategoryMatches = categories.filter(category => 
+        category.category.toLowerCase() === query
+      );
+
+      // Затем ищем частичные совпадения в названиях категорий
+      const partialCategoryMatches = categories.filter(category => 
+        category.category.toLowerCase().includes(query) &&
+        !exactCategoryMatches.includes(category)
+      );
+
+      // И только потом ищем в содержимом, если нет совпадений в названиях
+      const contentMatches = categories.filter(category => {
+        // Пропускаем категории, которые уже найдены
+        if (exactCategoryMatches.includes(category) || partialCategoryMatches.includes(category)) {
+          return false;
+        }
+        // Ищем в содержимом только если нет совпадений в названиях
+        if (exactCategoryMatches.length === 0 && partialCategoryMatches.length === 0) {
+          const matchingEntries = category.entries.filter(entry => 
+            entry.toLowerCase().includes(query)
+          );
+          if (matchingEntries.length > 0) {
+            category.matchingEntries = matchingEntries;
+            return true;
+          }
+        }
+        return false;
+      });
+
+      // Объединяем результаты в порядке приоритета
+      filteredCategories = [
+        ...exactCategoryMatches,
+        ...partialCategoryMatches,
+        ...contentMatches
+      ];
+
+      // Показываем информацию о результатах поиска
+      const totalMatches = filteredCategories.reduce((sum, cat) => 
+        sum + (cat.matchingEntries ? cat.matchingEntries.length : cat.entries.length), 0
       );
       
-      // Показываем количество найденных результатов
-      const totalMatches = filteredCategories.reduce((sum, cat) => 
-        sum + cat.matchingEntries.length, 0
-      );
-      searchInfo.textContent = `Найдено: ${filteredCategories.length} категорий, ${totalMatches} записей`;
+      if (filteredCategories.length === 0) {
+        searchInfo.textContent = "Ничего не найдено";
+      } else {
+        searchInfo.textContent = `Найдено: ${filteredCategories.length} категорий, ${totalMatches} записей`;
+        if (contentMatches.length > 0 && (exactCategoryMatches.length > 0 || partialCategoryMatches.length > 0)) {
+          searchInfo.textContent += ` (включая ${contentMatches.length} категорий с совпадениями в содержимом)`;
+        }
+      }
     }
     
     renderCategories();
@@ -148,13 +177,36 @@ function copyToClipboard(text) {
 function showCategory(item) {
   selectedCategory = item;
   document.getElementById("categoryTitle").textContent = `Категория: ${item.category}`;
-  categoryInfo.textContent = `Записей: ${item.entries.length}`;
   
   const list = document.getElementById("domainList");
   list.innerHTML = "";
 
-  const entriesToShow = item.matchingEntries || item.entries;
+  // Проверяем, есть ли данные в категории
+  if (!item.entries || item.entries.length === 0) {
+    categoryInfo.textContent = "Нет записей";
+    return;
+  }
+
+  categoryInfo.textContent = `Записей: ${item.entries.length}`;
   
+  // Определяем, какие записи показывать
+  let entriesToShow = [];
+  
+  if (searchInput.value.trim() !== "") {
+    // Если есть поисковый запрос, показываем только совпадающие записи
+    const query = searchInput.value.toLowerCase().trim();
+    entriesToShow = item.entries.filter(entry => 
+      entry.toLowerCase().includes(query)
+    );
+  } else {
+    // Если поиска нет, показываем все записи
+    entriesToShow = item.entries;
+  }
+
+  // Сортируем записи по алфавиту
+  entriesToShow.sort((a, b) => a.localeCompare(b));
+
+  // Создаем и добавляем элементы списка
   entriesToShow.forEach((entry) => {
     const li = document.createElement("li");
     li.textContent = entry;
