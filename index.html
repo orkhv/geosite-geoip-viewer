@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,20 +8,32 @@
 </head>
 <body>
   <div class="header">
-    <label for="modeSelect">Режим:</label>
-    <select id="modeSelect">
-      <option value="geosite">GeoSite</option>
-      <option value="geoip">GeoIP</option>
-    </select>
+    <h1>GeoSite/GeoIP Viewer</h1>
+    <div class="controls">
+      <label for="modeSelect">Режим:</label>
+      <select id="modeSelect">
+        <option value="geosite">GeoSite</option>
+        <option value="geoip">GeoIP</option>
+      </select>
+      <div class="search-container">
+        <input type="text" id="search" placeholder="Поиск категории или значения..." />
+        <div class="search-info"></div>
+      </div>
+    </div>
   </div>
   <div class="container">
     <div class="sidebar">
-      <input type="text" id="search" placeholder="Поиск категории..." />
+      <div class="loading" id="loading">Загрузка данных...</div>
       <ul id="categoryList"></ul>
     </div>
     <div class="main">
-      <h2 id="categoryTitle">Выберите категорию</h2>
-      <ul id="domainList"></ul>
+      <div class="category-header">
+        <h2 id="categoryTitle">Выберите категорию</h2>
+        <div class="category-info" id="categoryInfo"></div>
+      </div>
+      <div class="entries-container">
+        <ul id="domainList"></ul>
+      </div>
     </div>
   </div>
 
