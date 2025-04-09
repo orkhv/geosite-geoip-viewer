@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geosite/GeoIP Viewer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <label for="modeSelect">Режим:</label>
+    <select id="modeSelect">
+      <option value="geosite">GeoSite</option>
+      <option value="geoip">GeoIP</option>
+    </select>
+  </div>
+  <div class="container">
+    <div class="sidebar">
+      <input type="text" id="search" placeholder="Поиск категории..." />
+      <ul id="categoryList"></ul>
+    </div>
+    <div class="main">
+      <h2 id="categoryTitle">Выберите категорию</h2>
+      <ul id="domainList"></ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
