@@ -10,26 +10,30 @@
   <div class="header">
     <h1>GeoSite/GeoIP Viewer</h1>
     <div class="controls">
-      <label for="modeSelect">Режим:</label>
+      <label>Режим:</label>
       <select id="modeSelect">
         <option value="geosite">GeoSite</option>
         <option value="geoip">GeoIP</option>
       </select>
       <div class="search-container">
-        <input type="text" id="search" placeholder="Поиск категории или значения..." />
-        <div class="search-info"></div>
+        <input type="text" id="search" placeholder="Поиск...">
+        <label class="search-mode">
+          <input type="checkbox" id="searchInContent">
+          Искать в содержимом
+        </label>
+        <span class="search-info"></span>
       </div>
     </div>
   </div>
   <div class="container">
     <div class="sidebar">
-      <div class="loading" id="loading">Загрузка данных...</div>
+      <div id="loading" class="loading" style="display: none;">Загрузка данных...</div>
       <ul id="categoryList"></ul>
     </div>
     <div class="main">
       <div class="category-header">
         <h2 id="categoryTitle">Выберите категорию</h2>
-        <div class="category-info" id="categoryInfo"></div>
+        <div id="categoryInfo" class="category-info"></div>
       </div>
       <div class="entries-container">
         <ul id="domainList"></ul>

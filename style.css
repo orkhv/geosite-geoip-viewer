@@ -37,10 +37,13 @@ body {
 .search-container {
   flex-grow: 1;
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 #search {
-  width: 100%;
+  flex-grow: 1;
   padding: 8px 12px;
   font-size: 14px;
   border: 1px solid #ddd;
@@ -48,13 +51,25 @@ body {
   background: #fff;
 }
 
+.search-mode {
+  white-space: nowrap;
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  user-select: none;
+  cursor: pointer;
+}
+
+.search-mode input[type="checkbox"] {
+  margin: 0;
+}
+
 .search-info {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
   color: #666;
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .container {
