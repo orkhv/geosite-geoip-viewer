@@ -2,7 +2,7 @@ name: Update Data
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Каждый день в полночь
+    - cron: '10 3 * * *'  # Каждый день в полночь
   workflow_dispatch:  # Позволяет запускать вручную
 
 jobs:
