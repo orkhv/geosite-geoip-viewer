@@ -1,4 +1,4 @@
-# GeoSite-GeoIP Viewer
+[# GeoSite-GeoIP Viewer
 
 Веб-приложение для просмотра данных GeoSite и GeoIP.
 
@@ -41,4 +41,4 @@ npm install
 npm run update
 ```
 
-4. Откройте `index.html` в браузере 
+4. Откройте `index.html` в браузере ](https://orkhv.github.io/geosite-geoip-viewer/)
