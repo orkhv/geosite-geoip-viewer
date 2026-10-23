@@ -2,7 +2,7 @@ name: Update Data
 
 on:
   schedule:
-    - cron: '10 3 * * *'  # Каждый день в полночь
+    - cron: '10 3 * * *'  # Каждый день в 03:10 UTC
   workflow_dispatch:  # Позволяет запускать вручную
 
 jobs:
@@ -12,16 +12,13 @@ jobs:
       contents: write
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
     
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v7
       with:
-        node-version: '18'
+        node-version: '24'
         
-    - name: Install dependencies
-      run: npm install
-      
     - name: Update data
       run: node update-data.js
       

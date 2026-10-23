@@ -1,56 +1,74 @@
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 
 const DATA_DIR = path.join(__dirname, 'data');
+const MAX_ATTEMPTS = 5;
 
-// Создаем директорию для данных, если её нет
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR);
 }
 
-// Функция для загрузки файла
-function downloadFile(url, filename) {
-  return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(path.join(DATA_DIR, filename));
-    
-    https.get(url, (response) => {
-      if (response.statusCode !== 200) {
-        reject(new Error(`Failed to download ${url}: ${response.statusCode}`));
-        return;
-      }
-
-      response.pipe(file);
-      
-      file.on('finish', () => {
-        file.close();
-        resolve();
-      });
-    }).on('error', (err) => {
-      fs.unlink(path.join(DATA_DIR, filename), () => {});
-      reject(err);
-    });
-  });
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Загружаем файлы
+async function downloadFile(url, filename) {
+  const dest = path.join(DATA_DIR, filename);
+  const temp = `${dest}.tmp`;
+  let lastError;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'geosite-geoip-viewer' },
+        redirect: 'follow',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download ${url}: ${response.status}`);
+      }
+
+      const data = Buffer.from(await response.arrayBuffer());
+      if (data.length === 0) {
+        throw new Error(`Empty response for ${url}`);
+      }
+
+      fs.writeFileSync(temp, data);
+      fs.renameSync(temp, dest);
+      return;
+    } catch (error) {
+      lastError = error;
+      fs.rmSync(temp, { force: true });
+
+      if (attempt < MAX_ATTEMPTS) {
+        const delay = attempt * 2000;
+        console.warn(
+          `${filename}: попытка ${attempt} не удалась (${error.code || error.message}), повтор через ${delay} мс`
+        );
+        await sleep(delay);
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 async function updateData() {
   try {
     console.log('Начинаем обновление данных...');
-    
+
     await downloadFile(
       'https://raw.githubusercontent.com/orkhv/geosite-geoip-updater/main/geosite.json',
       'geosite.json'
     );
     console.log('geosite.json обновлен');
-    
+
     await downloadFile(
       'https://raw.githubusercontent.com/orkhv/geosite-geoip-updater/main/geoip.json',
       'geoip.json'
     );
     console.log('geoip.json обновлен');
-    
-    // Добавляем timestamp последнего обновления
+
     const timestamp = {
       lastUpdate: new Date().toISOString()
     };
@@ -58,7 +76,7 @@ async function updateData() {
       path.join(DATA_DIR, 'timestamp.json'),
       JSON.stringify(timestamp, null, 2)
     );
-    
+
     console.log('Данные успешно обновлены');
   } catch (error) {
     console.error('Ошибка при обновлении данных:', error);
@@ -66,4 +84,4 @@ async function updateData() {
   }
 }
 
-updateData(); 
+updateData();
