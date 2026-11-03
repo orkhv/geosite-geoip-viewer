@@ -29,6 +29,7 @@ const MAX_ATTEMPTS = 5;
 const REPOS = {
   xray: 'XTLS/Xray-rules-dat',
   loyalsoldier: 'Loyalsoldier/v2ray-rules-dat',
+  medium1992: 'Medium1992/geo-dat',
 };
 
 // gz: release has a .gz copy, download it to save bandwidth.
@@ -50,6 +51,12 @@ export const SOURCES = [
     title: 'Loyalsoldier',
     repo: 'loyalsoldier',
     files: { geosite: { name: 'geosite.dat' }, geoip: { name: 'geoip.dat' } },
+  },
+  {
+    id: 'medium1992',
+    title: 'Medium1992 (MetaCubeX)',
+    repo: 'medium1992',
+    files: { geosite: { name: 'geosite.dat' }, geoip: { name: 'geoip.dat' }, asn: { name: 'asn.dat' } },
   },
 ];
 
@@ -115,7 +122,7 @@ async function downloadDat(repo, tag, { name, gz }) {
 
 function writeKind(dir, categories) {
   fs.mkdirSync(dir, { recursive: true });
-  const names = [...categories.keys()].sort();
+  const names = [...categories.keys()].sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
   const index = [];
   let chunk = [];
   let chunkSize = 0;
@@ -167,7 +174,8 @@ async function build() {
     for (const [kind, file] of Object.entries(source.files)) {
       const started = Date.now();
       const dat = await downloadDat(source.repo, tag, file);
-      const stats = writeKind(path.join(DIST, 'data', source.id, kind), decode(dat, kind));
+      // asn.dat has the geoip layout: categories are AS numbers with CIDR lists.
+      const stats = writeKind(path.join(DIST, 'data', source.id, kind), decode(dat, kind === 'geosite' ? 'geosite' : 'geoip'));
       info.kinds[kind] = { file: file.name, ...stats };
       console.log(`${source.id}/${kind}: ${file.name}`, stats, `${Date.now() - started} мс`);
     }

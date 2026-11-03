@@ -17,10 +17,11 @@
 
 ## ✨ Возможности
 
-- 🔀 **Три источника данных** — переключаются одним селектором
+- 🔀 **Четыре источника данных** — переключаются одним селектором
 - 🔎 **Умный поиск в содержимом**
   - домен: `www.youtube.com` → найдёт `domain:youtube.com`, подходящие `keyword:` и `regexp:`
   - IP: `8.8.8.8` или `2001:4860:4860::8888` → все CIDR, куда адрес попадает
+  - ASN: `1.1.1.1` → найдёт `AS13335` (Cloudflare)
 - ⚡ **Быстро даже на огромных наборах** — категория на 800 000+ записей открывается за доли секунды
 - 🔗 **Ссылки на категории** — `#xray-full/geoip/us` открывает сразу нужное
 - 📋 **Клик по записи — копия в буфер**, клик по `geosite:name` — копия готового правила
@@ -33,6 +34,7 @@
 | **Xray Lite** ⭐ | `geosite.dat` | `geoip-lite.dat` | [XTLS/Xray-rules-dat](https://github.com/XTLS/Xray-rules-dat) — идут в ядро по умолчанию |
 | **Xray Full** | `geosite-expand.dat` | `geoip-full.dat` | [XTLS/Xray-rules-dat](https://github.com/XTLS/Xray-rules-dat) — расширенные списки + все страны |
 | **Loyalsoldier** | `geosite.dat` | `geoip.dat` | [Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat) |
+| **Medium1992** | `geosite.dat` | `geoip.dat` + `asn.dat` | [Medium1992/geo-dat](https://github.com/Medium1992/geo-dat) — сборка из MetaCubeX/meta-rules-dat, плюс все автономные системы |
 
 ## 🕒 Расписание
 

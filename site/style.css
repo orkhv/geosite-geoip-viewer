@@ -129,6 +129,12 @@ body {
   cursor: pointer;
 }
 
+#categoryList li.more {
+  color: #999;
+  cursor: default;
+  font-style: italic;
+}
+
 #categoryList .count {
   color: #999;
   font-size: 12px;

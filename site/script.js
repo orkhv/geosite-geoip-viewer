@@ -2,6 +2,8 @@ const ROW_HEIGHT = 26;
 const CHUNK_CACHE_SIZE = 6;
 const SEARCH_CONCURRENCY = 4;
 const KEEP_MATCHES = 5000;
+const MAX_SIDEBAR = 3000;
+const MODES = { geosite: 'GeoSite', geoip: 'GeoIP', asn: 'ASN' };
 
 let meta = null;
 let index = [];              // [{ name, count, chunks }]
@@ -34,7 +36,8 @@ const dataUrl = (file) => `data/${state.source}/${state.mode}/${file}`;
 function readHash() {
   const [source, mode, category] = decodeURIComponent(location.hash.slice(1)).split('/');
   if (meta.sources.some((s) => s.id === source)) state.source = source;
-  if (mode === 'geosite' || mode === 'geoip') state.mode = mode;
+  if (mode in MODES) state.mode = mode;
+  fillModes();
   state.category = category || '';
 }
 
@@ -133,7 +136,7 @@ function parseIP(text) {
 
 function makeMatcher(query) {
   const q = query.toLowerCase();
-  if (state.mode === 'geoip') {
+  if (state.mode !== 'geosite') {
     const ip = parseIP(q);
     if (!ip) return (entry) => entry.includes(q);
     if (!ip.v6) {
@@ -189,7 +192,7 @@ searchInput.addEventListener('input', () => {
 });
 function updatePlaceholder() {
   searchInput.placeholder = searchInContent.checked
-    ? (state.mode === 'geoip' ? 'IP-адрес или часть CIDR...' : 'Домен или часть правила...')
+    ? (state.mode !== 'geosite' ? 'IP-адрес или часть CIDR...' : 'Домен или часть правила...')
     : 'Поиск по категориям...';
 }
 searchInContent.addEventListener('change', () => {
@@ -268,7 +271,11 @@ async function searchContent(query) {
 
 function renderCategories() {
   const fragment = document.createDocumentFragment();
-  for (const item of filtered) {
+  // ASN has ~80k categories: keep the DOM small, the active one always visible.
+  let shown = filtered.slice(0, MAX_SIDEBAR);
+  const active = filtered.find((c) => c.name === state.category);
+  if (active && !shown.includes(active)) shown = [active, ...shown];
+  for (const item of shown) {
     const li = document.createElement('li');
     li.dataset.name = item.name;
     const count = contentMatches?.get(item.name)?.count ?? item.count;
@@ -278,12 +285,18 @@ function renderCategories() {
     if (item.name === state.category) li.classList.add('active');
     fragment.appendChild(li);
   }
+  if (filtered.length > shown.length) {
+    const li = document.createElement('li');
+    li.className = 'more';
+    li.textContent = `...и ещё ${filtered.length - shown.length}, уточните поиск`;
+    fragment.appendChild(li);
+  }
   categoryList.replaceChildren(fragment);
 }
 
 categoryList.addEventListener('click', (event) => {
   const li = event.target.closest('li');
-  if (li) showCategory(li.dataset.name);
+  if (li?.dataset.name) showCategory(li.dataset.name);
 });
 
 function renderEntries() {
@@ -341,11 +354,12 @@ async function showCategory(name) {
   }
   if (token !== showToken) return;
 
-  const prefix = state.mode === 'geosite' ? 'geosite' : 'geoip';
+  const kind = meta.sources.find((s) => s.id === state.source).kinds[state.mode];
+  const rule = state.mode === 'asn' ? `ext:${kind.file}:${name}` : `${state.mode}:${name}`;
   categoryInfo.innerHTML = '';
   categoryInfo.append(info, ' · ');
   const code = document.createElement('code');
-  code.textContent = `${prefix}:${name}`;
+  code.textContent = rule;
   code.title = 'Скопировать';
   code.onclick = () => navigator.clipboard.writeText(code.textContent);
   categoryInfo.append(code);
@@ -398,8 +412,21 @@ function renderMeta() {
   metaInfo.append(link, ` · ${kind.file} · ${kind.categories} категорий, ${kind.entries.toLocaleString('ru-RU')} записей · обновлено ${built}`);
 }
 
+// Mode options depend on what the source ships (ASN only for some).
+function fillModes() {
+  const kinds = meta.sources.find((s) => s.id === state.source).kinds;
+  if (!(state.mode in kinds)) {
+    state.mode = 'geosite';
+    state.category = '';
+  }
+  modeSelect.replaceChildren(...Object.keys(kinds).map((k) => new Option(MODES[k] ?? k, k)));
+  modeSelect.value = state.mode;
+  updatePlaceholder();
+}
+
 sourceSelect.addEventListener('change', () => {
   state.source = sourceSelect.value;
+  fillModes();
   loadIndex();
 });
 modeSelect.addEventListener('change', () => {
