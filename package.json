@@ -1,0 +1,15 @@
+{
+  "name": "geosite-geoip-viewer",
+  "version": "2.0.0",
+  "description": "Viewer for GeoSite and GeoIP data (XTLS/Xray-rules-dat, Loyalsoldier/v2ray-rules-dat)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/build.mjs --check",
+    "serve": "python3 -m http.server 8765 -d dist"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

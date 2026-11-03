@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GeoSite/GeoIP Viewer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <div class="title-row">
+      <h1>GeoSite/GeoIP Viewer</h1>
+      <span id="meta" class="meta"></span>
+    </div>
+    <div class="controls">
+      <label>Источник:
+        <select id="sourceSelect"></select>
+      </label>
+      <label>Режим:
+        <select id="modeSelect">
+          <option value="geosite">GeoSite</option>
+          <option value="geoip">GeoIP</option>
+        </select>
+      </label>
+      <div class="search-container">
+        <input type="search" id="search" placeholder="Поиск по категориям...">
+        <label class="search-mode">
+          <input type="checkbox" id="searchInContent">
+          Искать в содержимом
+        </label>
+        <span class="search-info"></span>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="sidebar">
+      <div id="loading" class="loading" hidden>Загрузка данных...</div>
+      <ul id="categoryList"></ul>
+    </div>
+    <div class="main">
+      <div class="category-header">
+        <h2 id="categoryTitle">Выберите категорию</h2>
+        <div id="categoryInfo" class="category-info"></div>
+      </div>
+      <div id="entries" class="entries">
+        <div id="entriesSpacer" class="entries-spacer"></div>
+        <ul id="domainList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

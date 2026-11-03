@@ -1,0 +1,70 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: '30 19 * * *'  # после сборки XTLS/Xray-rules-dat (18:00 UTC)
+    - cron: '30 23 * * *'  # после сборки Loyalsoldier/v2ray-rules-dat (~22:00 UTC)
+    - cron: '30 7 * * *'   # запасной прогон, если релизы задержались
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      # По расписанию пересобираем только если вышел новый релиз хотя бы одного источника.
+      - name: Check releases
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            node scripts/build.mjs --check
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/build.mjs
+
+      - name: Upload artifact
+        if: steps.check.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.changed == 'true'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
