@@ -24,6 +24,9 @@ const searchInfo = document.querySelector('.search-info');
 const categoryList = document.getElementById('categoryList');
 const categoryTitle = document.getElementById('categoryTitle');
 const categoryInfo = document.getElementById('categoryInfo');
+const categoryActions = document.getElementById('categoryActions');
+const copyPlain = document.getElementById('copyPlain');
+const copyJson = document.getElementById('copyJson');
 const entriesBox = document.getElementById('entries');
 const entriesSpacer = document.getElementById('entriesSpacer');
 const domainList = document.getElementById('domainList');
@@ -335,6 +338,7 @@ async function showCategory(name) {
   renderCategories();
   categoryList.querySelector('li.active')?.scrollIntoView({ block: 'nearest' });
   categoryTitle.textContent = `Категория: ${name}`;
+  categoryActions.hidden = true;
 
   const m = contentMatches?.get(name);
   let entries;
@@ -365,9 +369,77 @@ async function showCategory(name) {
   categoryInfo.append(code);
 
   selected = { name, entries };
+  updateCopyTitles();
+  categoryActions.hidden = false;
   entriesBox.scrollTop = 0;
   renderEntries();
 }
+
+function updateCopyTitles() {
+  const scope = contentMatches ? ' Всю категорию, не только результаты поиска.' : '';
+  copyPlain.title = `Скопировать все записи, по одной на строку.${scope}`;
+  copyJson.title = `Скопировать все записи JSON-массивом.${scope}`;
+}
+
+// Full category text. During content search the list on screen is only the hits.
+async function categoryText(asJson) {
+  const name = selected.name;
+  let entries = selected.entries;
+  if (contentMatches) {
+    const item = index.find((c) => c.name === name);
+    if (!item) throw new Error('Категория не найдена');
+    entries = await loadCategoryEntries(item);
+    if (selected?.name !== name) return null;
+  }
+  return asJson ? JSON.stringify(entries) : entries.join('\n');
+}
+
+function flashCopy(button, text, ok) {
+  button.textContent = text;
+  button.classList.toggle('copied', ok);
+  button.classList.toggle('failed', !ok);
+  setTimeout(() => {
+    button.textContent = button.dataset.label;
+    button.classList.remove('copied', 'failed');
+  }, 1200);
+}
+
+function cancelled() {
+  const error = new Error('cancelled');
+  error.cancelled = true;
+  return error;
+}
+
+async function writeClipboard(textPromise) {
+  // Promise inside ClipboardItem keeps the click gesture while chunks load.
+  const blob = Promise.resolve(textPromise).then((text) => {
+    if (text == null) throw cancelled();
+    return new Blob([text], { type: 'text/plain' });
+  });
+  if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]);
+    return;
+  }
+  const text = await textPromise;
+  if (text == null) throw cancelled();
+  await navigator.clipboard.writeText(text);
+}
+
+async function copyCategory(asJson, button) {
+  if (!selected || button.disabled) return;
+  button.disabled = true;
+  try {
+    await writeClipboard(categoryText(asJson));
+    flashCopy(button, 'Скопировано', true);
+  } catch (error) {
+    if (!error.cancelled) flashCopy(button, 'Ошибка', false);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+copyPlain.addEventListener('click', () => copyCategory(false, copyPlain));
+copyJson.addEventListener('click', () => copyCategory(true, copyJson));
 
 // --- Loading ----------------------------------------------------------------
 
@@ -380,6 +452,7 @@ async function loadIndex() {
   renderEntries();
   categoryTitle.textContent = 'Выберите категорию';
   categoryInfo.textContent = '';
+  categoryActions.hidden = true;
   try {
     const res = await fetch(dataUrl('index.json'));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

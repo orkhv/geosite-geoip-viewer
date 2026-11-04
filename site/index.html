@@ -36,7 +36,13 @@
     </div>
     <div class="main">
       <div class="category-header">
-        <h2 id="categoryTitle">Выберите категорию</h2>
+        <div class="category-title-row">
+          <h2 id="categoryTitle">Выберите категорию</h2>
+          <div id="categoryActions" class="category-actions" hidden>
+            <button type="button" id="copyPlain" data-label="Текст" title="Скопировать все записи, по одной на строку">Текст</button>
+            <button type="button" id="copyJson" data-label="JSON" title="Скопировать все записи JSON-массивом">JSON</button>
+          </div>
+        </div>
         <div id="categoryInfo" class="category-info"></div>
       </div>
       <div id="entries" class="entries">
